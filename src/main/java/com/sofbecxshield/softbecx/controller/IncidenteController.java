@@ -5,6 +5,8 @@ import com.sofbecxshield.softbecx.dto.IncidenteRespuestaDTO;
 import com.sofbecxshield.softbecx.model.Incidente;
 import com.sofbecxshield.softbecx.service.IncidenteService;
 import java.util.List;
+import java.util.Map;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -76,11 +78,21 @@ public class IncidenteController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarIncidente(
+    public ResponseEntity<?> eliminarIncidente(
             @PathVariable Integer id) {
 
-        incidenteService.eliminarIncidente(id);
+        try {
+            incidenteService.eliminarIncidente(id);
 
-        return ResponseEntity.noContent().build();
+            return ResponseEntity.noContent().build();
+
+        } catch (DataIntegrityViolationException error) {
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of(
+                            "mensaje",
+                            "No se puede eliminar este incidente porque tiene análisis, evidencias o recomendaciones relacionadas. Se debe conservar su historial."
+                    ));
+        }
     }
 }
