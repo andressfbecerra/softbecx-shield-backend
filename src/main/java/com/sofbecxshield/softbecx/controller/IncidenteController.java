@@ -4,8 +4,12 @@ package com.sofbecxshield.softbecx.controller;
 import com.sofbecxshield.softbecx.dto.IncidenteRespuestaDTO;
 import com.sofbecxshield.softbecx.model.Incidente;
 import com.sofbecxshield.softbecx.service.IncidenteService;
+
+import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +56,7 @@ public class IncidenteController {
 
     @PostMapping
     public ResponseEntity<IncidenteRespuestaDTO> guardarIncidente(
-            @RequestBody Incidente incidente) {
+            @Valid @RequestBody Incidente incidente) {
 
         Incidente nuevoIncidente =
                 incidenteService.guardarIncidente(incidente);
@@ -64,7 +68,7 @@ public class IncidenteController {
     @PutMapping("/{id}")
     public ResponseEntity<IncidenteRespuestaDTO> actualizarIncidente(
             @PathVariable Integer id,
-            @RequestBody Incidente incidente) {
+            @Valid @RequestBody Incidente incidente) {
 
         Incidente actualizado =
                 incidenteService.actualizarIncidente(id, incidente);

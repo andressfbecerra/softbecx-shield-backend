@@ -13,6 +13,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "incidentes")
@@ -23,18 +25,27 @@ public class Incidente {
     @Column(name = "id_incidente")
     private Integer idIncidente;
 
+    @NotBlank(message = "El título es obligatorio y no puede estar vacío.")
+    @Size(max = 120, message = "El título no puede superar los 120 caracteres.")
     @Column(name = "titulo", nullable = false, length = 120)
     private String titulo;
 
+    @NotBlank(message = "La descripción es obligatoria y no puede estar vacía.")
     @Column(name = "descripcion", nullable = false, columnDefinition = "TEXT")
     private String descripcion;
 
+    @NotBlank(message = "El tipo de incidente es obligatorio.")
+    @Size(max = 40, message = "El tipo de incidente no puede superar los 40 caracteres.")
     @Column(name = "tipo_incidente", nullable = false, length = 40)
     private String tipoIncidente;
 
+    @NotBlank(message = "El origen del incidente es obligatorio.")
+    @Size(max = 20, message = "El origen no puede superar los 20 caracteres.")
     @Column(name = "origen", nullable = false, length = 20)
     private String origen = "MANUAL";
 
+    @NotBlank(message = "El estado del incidente es obligatorio.")
+    @Size(max = 20, message = "El estado no puede superar los 20 caracteres.")
     @Column(name = "estado", nullable = false, length = 20)
     private String estado = "PENDIENTE";
 
