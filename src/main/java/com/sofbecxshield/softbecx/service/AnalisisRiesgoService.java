@@ -3,24 +3,37 @@ package com.sofbecxshield.softbecx.service;
 
 import com.sofbecxshield.softbecx.model.AnalisisRiesgo;
 import com.sofbecxshield.softbecx.model.Incidente;
+import com.sofbecxshield.softbecx.model.Recomendacion;
 import com.sofbecxshield.softbecx.repository.AnalisisRiesgoRepository;
 import com.sofbecxshield.softbecx.repository.IncidenteRepository;
+import com.sofbecxshield.softbecx.repository.RecomendacionRepository;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AnalisisRiesgoService {
 
     private final AnalisisRiesgoRepository analisisRiesgoRepository;
     private final IncidenteRepository incidenteRepository;
+    private final RecomendacionRepository recomendacionRepository;
+    private final MotorReglasService motorReglasService;
+    private final GeneradorRecomendacionesService generadorRecomendacionesService;
 
     public AnalisisRiesgoService(
             AnalisisRiesgoRepository analisisRiesgoRepository,
-            IncidenteRepository incidenteRepository) {
+            IncidenteRepository incidenteRepository,
+            RecomendacionRepository recomendacionRepository,
+            MotorReglasService motorReglasService,
+            GeneradorRecomendacionesService generadorRecomendacionesService) {
 
         this.analisisRiesgoRepository = analisisRiesgoRepository;
         this.incidenteRepository = incidenteRepository;
+        this.recomendacionRepository = recomendacionRepository;
+        this.motorReglasService = motorReglasService;
+        this.generadorRecomendacionesService = generadorRecomendacionesService;
     }
 
     public List<AnalisisRiesgo> listarAnalisisRiesgo() {
@@ -53,6 +66,45 @@ public class AnalisisRiesgoService {
         analisis.setIncidente(incidente);
 
         return analisisRiesgoRepository.save(analisis);
+    }
+
+    @Transactional
+    public AnalisisRiesgo analizarIncidente(Integer idIncidente) {
+
+        Incidente incidente = incidenteRepository.findById(idIncidente)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe el incidente con ID: " + idIncidente));
+
+        MotorReglasService.ResultadoAnalisis resultado =
+                motorReglasService.analizar(incidente);
+
+        AnalisisRiesgo analisis = new AnalisisRiesgo();
+
+        analisis.setPuntajeRiesgo(
+                BigDecimal.valueOf(resultado.getPuntaje()));
+
+        analisis.setNivelRiesgo(resultado.getNivel());
+
+        analisis.setExplicacion(resultado.getExplicacion());
+
+        analisis.setMetodoAnalisis("REGLAS");
+
+        analisis.setIncidente(incidente);
+
+        AnalisisRiesgo analisisGuardado =
+                analisisRiesgoRepository.save(analisis);
+
+        List<Recomendacion> recomendaciones =
+                generadorRecomendacionesService.generarRecomendaciones(
+                        resultado.getSenalesDetectadas());
+
+        for (Recomendacion recomendacion : recomendaciones) {
+            recomendacion.setAnalisisRiesgo(analisisGuardado);
+        }
+
+        recomendacionRepository.saveAll(recomendaciones);
+
+        return analisisGuardado;
     }
 
     public AnalisisRiesgo actualizarAnalisisRiesgo(

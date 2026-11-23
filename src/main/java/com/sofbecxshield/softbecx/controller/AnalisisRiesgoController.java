@@ -53,6 +53,17 @@ public class AnalisisRiesgoController {
                 .body(new AnalisisRiesgoRespuestaDTO(nuevo));
     }
 
+    @PostMapping("/incidente/{id}")
+    public ResponseEntity<AnalisisRiesgoRespuestaDTO> analizarIncidente(
+            @PathVariable Integer id) {
+
+        AnalisisRiesgo analisis =
+                analisisRiesgoService.analizarIncidente(id);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new AnalisisRiesgoRespuestaDTO(analisis));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<AnalisisRiesgoRespuestaDTO> actualizar(
             @PathVariable Integer id,

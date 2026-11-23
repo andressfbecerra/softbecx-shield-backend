@@ -8,19 +8,23 @@ import com.sofbecxshield.softbecx.repository.UsuarioRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class IncidenteService {
 
     private final IncidenteRepository incidenteRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AnalisisRiesgoService analisisRiesgoService;
 
     public IncidenteService(
             IncidenteRepository incidenteRepository,
-            UsuarioRepository usuarioRepository) {
+            UsuarioRepository usuarioRepository,
+            AnalisisRiesgoService analisisRiesgoService) {
 
         this.incidenteRepository = incidenteRepository;
         this.usuarioRepository = usuarioRepository;
+        this.analisisRiesgoService = analisisRiesgoService;
     }
 
     public List<Incidente> listarIncidentes() {
@@ -31,6 +35,7 @@ public class IncidenteService {
         return incidenteRepository.findById(id);
     }
 
+    @Transactional
     public Incidente guardarIncidente(Incidente incidente) {
 
         if (incidente.getUsuario() != null) {
@@ -50,7 +55,13 @@ public class IncidenteService {
             incidente.setUsuario(usuario);
         }
 
-        return incidenteRepository.save(incidente);
+        Incidente incidenteGuardado =
+                incidenteRepository.save(incidente);
+
+        analisisRiesgoService.analizarIncidente(
+                incidenteGuardado.getIdIncidente());
+
+        return incidenteGuardado;
     }
 
     public Incidente actualizarIncidente(
